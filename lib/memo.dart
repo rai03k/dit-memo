@@ -25,14 +25,31 @@ class _MemoPage extends State<MemoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Memo"),
+        title: Text(_data.title),
+        automaticallyImplyLeading: false,
+        leading: IconButton(onPressed: (){
+          Navigator.pop(context);
+        }, icon: Icon(Icons.arrow_back_ios_sharp)),
       ),
       body: Container(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(_data.title),
-              TextField(
-                controller: _memoController,
+              Text(
+                _data.title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20
+                ),),
+              Expanded(
+                child: TextField(
+                  keyboardType: TextInputType.multiline,
+                  maxLines: null,
+                  controller: _memoController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                  ),
+                ),
               ),
             ],
           )),

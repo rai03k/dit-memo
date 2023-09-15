@@ -19,7 +19,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
       home: const MyHomePage(),
@@ -97,20 +96,41 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  late List<Map<String, dynamic>> data;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text("Home"),
       ),
       body: Center(
+        child: FutureBuilder<List<Map<String, dynamic>>?>(
+          future: _rouCount(),
+          builder: (context, snapshot) {
+            // 通信中はスピナーを表示
+            if (snapshot.connectionState != ConnectionState.done) {
+              return CircularProgressIndicator();
+            }
+            // エラー発生時はエラーメッセージを表示
+            if (snapshot.hasError) {
+              return Text(snapshot.error.toString());
+            }
 
-      ),/*ListView.builder(
-          itemCount: dbHelper.queryRowCount(),
-          itemBuilder: (context, index) {
-            return _listTile("a");
-          }),*/
+            // データがnullでないかチェック
+            if (snapshot.hasData) {
+              return ListView.builder(
+                  itemCount: snapshot.data?.length,
+                  itemBuilder: (context, index) {
+                    return _listTile(snapshot.data?[index]['title']);
+                  }
+              );
+            } else {
+              return Text("データが存在しません");
+            }
+          },
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           InputDialog(context);
@@ -126,11 +146,17 @@ class _MyHomePageState extends State<MyHomePage> {
       DatabaseHelper.columnTitle: _title,
       DatabaseHelper.columnSubTitle: null,
       DatabaseHelper.columnMemo: null,
-      DatabaseHelper.columnCreatedAt: DateFormat('yyyy-MM-dd-Hms').format(DateTime.now()),
-      DatabaseHelper.columnUpdatedAt: DateFormat('yyyy-MM-dd-Hms').format(DateTime.now())
+      DatabaseHelper.columnCreatedAt: DateFormat('yyyy-MM-dd-HHmmss').format(DateTime.now()),
+      DatabaseHelper.columnUpdatedAt: DateFormat('yyyy-MM-dd-HHmmss').format(DateTime.now())
     };
     final id = await dbHelper.insert(row);
     print('登録しました。id: $id');
+  }
+
+  Future<List<Map<String, dynamic>>> _queryAllRows() async {
+    List<Map<String, dynamic>> data;
+    data = dbHelper.queryAllRows() as List<Map<String, dynamic>>;
+    return data;
   }
 
   // 照会ボタンクリック
@@ -163,5 +189,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void _allDate() async {
     int count = await dbHelper.queryRowCount();
     print(count);
+  }
+
+  Future<List<Map<String, dynamic>>> _rouCount() async {
+    return await dbHelper.queryAllRows();
   }
 }
